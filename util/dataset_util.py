@@ -1,5 +1,6 @@
 import gensim
 import pickle
+import os
 import pandas as pd
 import numpy as np
 from PIL import Image
@@ -92,3 +93,34 @@ def read_cifar_batch(root, data_filename, meta_filename, model, resolution, samp
     label_ids = data_batch['labels']
     labels = convert_labels(label_names, label_ids, model)
     return imgs, labels
+
+def read_one_caltech_class(root, class_name):
+    label_parts = class_name.split('.')
+    label = class_name
+    if len(label_parts) > 1:
+        label = label_parts[1].replace('-', '_')
+    label_arr = model.word_vec(label)
+    filenames = os.listdir(root + '/' + class_name)
+    outputs = []
+    for filename in filenames:
+        img = Image.open(root + '/' + class_name + '/' + filename)
+        img_arr = np.array(img) / 255. - 1
+        elt = {'img': img_arr, 'label': label_arr}
+        outputs.append(elt)
+    return outputs
+
+def read_caltech(root, class_size):
+    class_names = os.listdir(root)
+    data_list = []
+    for class_name in class_names:
+        class_data = read_one_caltech_class(root, class_name)
+        data_list.extend(class_data)
+    np.random.shuffle(data_list)
+    x = []
+    y = []
+    for data_elt in data_list:
+        x.append(data_elt['img'])
+        y.append(data_elt['label'])
+    x = np.array(x)
+    y = np.array(y)
+    return x, y
