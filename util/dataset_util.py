@@ -23,7 +23,7 @@ def assemble_cifar_img(img_flat, resolution):
         img[:,:,2] = img_B
         img_object = Image.fromarray(img, 'RGB')
         img_object = img_object.resize(resolution)
-        img_arr = np.array(img_object).astype(float) / 255. - 1
+        img_arr = np.array(img_object).astype(float) / 255. - .5
         imgs.append(img_arr)
     imgs = np.array(imgs)
     return imgs
@@ -60,7 +60,7 @@ def read_embedding_model(model_filename):
 def read_single_image(filename):
     img = Image.open(filename).resize((224, 224))
     img_arr = np.array(img).astype(float)
-    img_arr = img_arr / 255. - 1
+    img_arr = img_arr / 255. - .5
     img_arr = np.expand_dims(img_arr, axis=0)
     return img_arr
 
@@ -94,26 +94,33 @@ def read_cifar_batch(root, data_filename, meta_filename, model, resolution, samp
     labels = convert_labels(label_names, label_ids, model)
     return imgs, labels
 
-def read_one_caltech_class(root, class_name):
+def read_one_caltech_class(root, class_name, resolution, model):
     label_parts = class_name.split('.')
     label = class_name
     if len(label_parts) > 1:
         label = label_parts[1].replace('-', '_')
-    label_arr = model.word_vec(label)
+    words = label.split('_')
+    label_arr = np.zeros(300)
+    for w in words:
+        label_arr = label_arr + model.word_vec(w)
+    label_arr = label_arr / len(words)
     filenames = os.listdir(root + '/' + class_name)
     outputs = []
     for filename in filenames:
-        img = Image.open(root + '/' + class_name + '/' + filename)
-        img_arr = np.array(img) / 255. - 1
-        elt = {'img': img_arr, 'label': label_arr}
-        outputs.append(elt)
+        img = Image.open(root + '/' + class_name + '/' + filename).resize(resolution)
+        img_arr = np.array(img) / 255. - .5
+        if len(img_arr.shape) == 3:
+            elt = {'img': img_arr, 'label': label_arr}
+            outputs.append(elt)
     return outputs
 
-def read_caltech(root, class_size):
+def read_caltech(root, class_size, resolution, model):
     class_names = os.listdir(root)
     data_list = []
-    for class_name in class_names:
-        class_data = read_one_caltech_class(root, class_name)
+    for i in range(class_size):
+        idx = np.random.randint(0, len(class_names))
+        class_name = class_names[idx]
+        class_data = read_one_caltech_class(root, class_name, resolution, model)
         data_list.extend(class_data)
     np.random.shuffle(data_list)
     x = []
