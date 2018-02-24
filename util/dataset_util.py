@@ -114,14 +114,22 @@ def read_one_caltech_class(root, class_name, resolution, model):
             outputs.append(elt)
     return outputs
 
+def exist_in_dict(model, class_name):
+    words = class_name.split('_')
+    for word in words:
+        if word not in model.vocab:
+            return False
+    return True
+
 def read_caltech(root, class_size, resolution, model):
     class_names = os.listdir(root)
     data_list = []
     for i in range(class_size):
         idx = np.random.randint(0, len(class_names))
         class_name = class_names[idx]
-        class_data = read_one_caltech_class(root, class_name, resolution, model)
-        data_list.extend(class_data)
+        if exist_in_dict(model, class_name):
+            class_data = read_one_caltech_class(root, class_name, resolution, model)
+            data_list.extend(class_data)
     np.random.shuffle(data_list)
     x = []
     y = []
