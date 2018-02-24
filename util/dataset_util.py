@@ -95,10 +95,10 @@ def read_cifar_batch(root, data_filename, meta_filename, model, resolution, samp
     return imgs, labels
 
 def read_one_caltech_class(root, class_name, resolution, model):
-    label_parts = class_name.split('.')
     label = class_name
-    if len(label_parts) > 1:
-        label = label_parts[1].replace('-', '_')
+    if '.' in class_name:
+        class_name_parts = class_name.split('.')
+        label = class_name_parts[1].replace('-', '_')
     words = label.split('_')
     label_arr = np.zeros(300)
     for w in words:
@@ -127,7 +127,11 @@ def read_caltech(root, class_size, resolution, model):
     for i in range(class_size):
         idx = np.random.randint(0, len(class_names))
         class_name = class_names[idx]
-        if exist_in_dict(model, class_name):
+        clean_name = class_name
+        if '.' in class_name:
+            class_name_parts = class_name.split('.')
+            clean_name = class_name_parts[1].replace('-', '_')
+        if exist_in_dict(model, clean_name):
             class_data = read_one_caltech_class(root, class_name, resolution, model)
             data_list.extend(class_data)
     np.random.shuffle(data_list)
