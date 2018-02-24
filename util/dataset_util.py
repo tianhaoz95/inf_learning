@@ -109,7 +109,7 @@ def read_one_caltech_class(root, class_name, resolution, model):
     for filename in filenames:
         img = Image.open(root + '/' + class_name + '/' + filename).resize(resolution)
         img_arr = np.array(img) / 255. - .5
-        if len(img_arr.shape) == 3:
+        if img_arr.shape == (224, 224, 3):
             elt = {'img': img_arr, 'label': label_arr}
             outputs.append(elt)
     return outputs
@@ -138,8 +138,9 @@ def read_caltech(root, class_size, resolution, model):
     x = []
     y = []
     for data_elt in data_list:
-        x.append(data_elt['img'])
-        y.append(data_elt['label'])
+        if data_elt['img'].shape == (224, 224, 3):
+            x.append(data_elt['img'])
+            y.append(data_elt['label'])
     x = np.array(x)
     y = np.array(y)
     return x, y
