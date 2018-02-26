@@ -17,5 +17,6 @@ def create_model():
 def predict(img_filename, model, embedding_model):
     img = read_single_image(img_filename)
     pred = model.predict(x=img, verbose=1)
+    print(pred[0])
     classes = convert_prediction(pred[0], embedding_model)
     return classes
